@@ -1,5 +1,5 @@
 {
-  "domain": "ical",
+  "domain": "icalcustom",
   "name": "ical Sensor CUSTOM",
   "codeowners": [
     "@Olen",
