@@ -1,0 +1,21 @@
+{
+  "domain": "ical",
+  "name": "iCal Sensor filter custom",
+  "codeowners": [
+    "@Olen",
+    "@TyBritten",
+    "@frazou1"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/Frazou1/ical_filter",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/Frazou1/ical_filter/issues",
+  "requirements": [
+    "icalendar==5.0.7"
+  ],
+  "ssdp": [],
+  "version": "1.0.0",
+  "zeroconf": []
+}
