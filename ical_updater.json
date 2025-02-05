@@ -1,14 +1,14 @@
 {
-    "sensor.ical": {
-      "updated_at": "2025-02-04",
-      "version": "1.0.0",
-      "local_location": "/custom_components/ics/__init__.py",
-      "remote_location": "https://raw.githubusercontent.com/tybritten/ical-sensor-homeassistant/master/__init__.py",
-      "visit_repo": "https://github.com/tybritten/ical-sensor-homeassistant/",
-      "changelog": "https://github.com/tybritten/ical-sensor-homeassistant/releases/latest",
-      "resources": [
-        "https://raw.githubusercontent.com/tybritten/ical-sensor-homeassistant/master/sensor.py",
-        "https://raw.githubusercontent.com/tybritten/ical-sensor-homeassistant/master/manifest.json"
-      ]
-    }
+  "sensor.ical_custom": {
+    "updated_at": "2025-02-04",
+    "version": "1.0.0",
+    "local_location": "/custom_components/ical_custom/__init__.py",
+    "remote_location": "https://raw.githubusercontent.com/Frazou1/ical_filter/main/__init__.py",
+    "visit_repo": "https://github.com/Frazou1/ical_filter/",
+    "changelog": "https://github.com/Frazou1/ical_filter/releases/latest",
+    "resources": [
+      "https://raw.githubusercontent.com/Frazou1/ical_filter/main/sensor.py",
+      "https://raw.githubusercontent.com/Frazou1/ical_filter/main/manifest.json"
+    ]
+  }
 }
