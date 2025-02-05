@@ -7,5 +7,5 @@ CONF_MAX_EVENTS = "max_events"
 CONF_DAYS = "days"
 
 ICON = "mdi:calendar"
-DEFAULT_NAME = "iCal Sensor"
+DEFAULT_NAME = "iCal Sensor filter custom"
 DEFAULT_MAX_EVENTS = 5
