@@ -1,5 +1,5 @@
 {
-  "domain": "ical",
+  "domain": "ical_custom",
   "name": "iCal Sensor filter custom",
   "codeowners": [
     "@Olen",
