@@ -1,20 +1,21 @@
 {
-  "domain": "icalcustom",
-  "name": "ical Sensor CUSTOM",
+  "domain": "ical",
+  "name": "iCal Sensor filter custom",
   "codeowners": [
     "@Olen",
-    "@TyBritten"
+    "@TyBritten",
+    "@frazou1"
   ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/tybritten/ical-sensor-homeassistant",
+  "documentation": "https://github.com/Frazou1/ical_filter",
   "homekit": {},
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/tybritten/ical-sensor-homeassistant/issues",
+  "issue_tracker": "https://github.com/Frazou1/ical_filter/issues",
   "requirements": [
     "icalendar==5.0.7"
   ],
   "ssdp": [],
-  "version": "1.7.1.1",
+  "version": "1.0.0",
   "zeroconf": []
 }
