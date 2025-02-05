@@ -1,4 +1,4 @@
-"""Support for iCal-URLs with keyword filtering."""
+"""Support for iCal-URLs."""
 
 import copy
 import logging
@@ -8,12 +8,13 @@ from homeassistant.components.calendar import (
     CalendarEntity,
     CalendarEvent,
     extract_offset,
+    get_date,
     is_offset_reached,
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import generate_entity_id
 
-from .const import DOMAIN, CONF_FILTER_KEYWORD
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,38 +25,28 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the iCal Calendar platform."""
     config = config_entry.data
     _LOGGER.debug("Running setup_platform for calendar")
-    _LOGGER.debug(f"Config: {config}")
+    _LOGGER.debug(f"Conf: {config}")
     name = config.get(CONF_NAME)
-    filter_keyword = config.get(CONF_FILTER_KEYWORD, "")
 
-    entity_id = generate_entity_id(ENTITY_ID_FORMAT, f"{DOMAIN} {name}", hass=hass)
+    entity_id = generate_entity_id(ENTITY_ID_FORMAT, DOMAIN + " " + name, hass=hass)
 
     ical_events = hass.data[DOMAIN][name]
 
-    calendar = ICalCalendarEventDevice(hass, name, entity_id, ical_events, filter_keyword)
+    calendar = ICalCalendarEventDevice(hass, name, entity_id, ical_events)
+
     async_add_entities([calendar], True)
 
 
 class ICalCalendarEventDevice(CalendarEntity):
-    """A device for getting the next calendar event from an iCal URL, with optional keyword filtering."""
+    """A device for getting the next Task from a WebDav Calendar."""
 
-    def __init__(self, hass, name, entity_id, ical_events, filter_keyword):
-        """Create the iCal Calendar Event Device.
-
-        Args:
-            hass: Home Assistant instance.
-            name: Name of the calendar.
-            entity_id: Entity ID to assign.
-            ical_events: Object managing les mises à jour du calendrier.
-            filter_keyword: Mot clé pour filtrer l'événement (sur le sommaire).
-        """
+    def __init__(self, hass, name, entity_id, ical_events):
+        """Create the iCal Calendar Event Device."""
         self.entity_id = entity_id
         self._event = None
         self._name = name
         self._offset_reached = False
         self.ical_events = ical_events
-        self._filter_keyword = filter_keyword.lower() if filter_keyword else ""
-        # Vous pouvez ajouter d'autres attributs si besoin
 
     @property
     def extra_state_attributes(self):
@@ -74,34 +65,25 @@ class ICalCalendarEventDevice(CalendarEntity):
 
     async def async_get_events(self, hass, start_date, end_date):
         """Get all events in a specific time frame."""
-        _LOGGER.debug("Running ICalCalendarEventDevice async_get_events")
+        _LOGGER.debug("Running ICalCalendarEventDevice async get events")
         return await self.ical_events.async_get_events(hass, start_date, end_date)
 
     async def async_update(self):
         """Update event data."""
-        _LOGGER.debug("Running ICalCalendarEventDevice async_update for %s", self.name)
+        _LOGGER.debug("Running ICalCalendarEventDevice async update for %s", self.name)
         await self.ical_events.update()
-
         event = copy.deepcopy(self.ical_events.event)
         if event is None:
-            self._event = None
+            self._event = event
             return
-
-        # Appliquer le filtrage par mot clé sur le sommaire de l'événement si un filtre est défini
-        if self._filter_keyword:
-            summary = event.get("summary", "").lower()
-            if self._filter_keyword not in summary:
-                _LOGGER.debug("L'événement '%s' ne contient pas le mot clé '%s' – il est ignoré", event.get("summary"), self._filter_keyword)
-                self._event = None
-                return
-
         (summary, offset) = extract_offset(event["summary"], OFFSET)
         event["summary"] = summary
         self._offset_reached = is_offset_reached(event["start"], offset)
-        self._event = CalendarEvent(
-            event["start"],
-            event["end"],
-            event["summary"],
-            event.get("description", ""),
-            event.get("location", "")
-        )
+        self._event = CalendarEvent(event["start"], event["end"], event["summary"], event["description"], event["location"])
+        # strongly typed class required.
+        # self._event = copy.deepcopy(event)
+        # self._event["start"] = {}
+        # self._event["end"] = {}
+        # self._event["start"]["dateTime"] = event["start"].isoformat()
+        # self._event["end"]["dateTime"] = event["end"].isoformat()
+        # self._event["all_day"] = event["all_day"]
