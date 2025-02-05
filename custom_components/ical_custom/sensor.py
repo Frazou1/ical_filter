@@ -1,4 +1,4 @@
-"""Creating sensors for upcoming events."""
+"""Creating sensors for upcoming events with filtering by keyword."""
 
 from datetime import datetime, timedelta
 import logging
@@ -8,12 +8,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_MAX_EVENTS, DOMAIN, ICON
+from .const import CONF_MAX_EVENTS, DOMAIN, ICON, CONF_FILTER_KEYWORD
 
 _LOGGER = logging.getLogger(__name__)
 
 
-# async def async_setup_entry(hass, config, add_entities, discovery_info=None):
 async def async_setup_platform(
     hass: HomeAssistant, config, add_entities, discovery_info=None
 ):
@@ -24,11 +23,13 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant, config_entry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the iCal Sensor."""
+    """Set up the iCal Sensor from a config entry."""
     config = config_entry.data
     name = config.get(CONF_NAME)
     max_events = config.get(CONF_MAX_EVENTS)
+    filter_keyword = config.get(CONF_FILTER_KEYWORD, "")
 
+    # Récupération de l'objet ical_events qui a été stocké dans hass.data
     ical_events = hass.data[DOMAIN][name]
     await ical_events.update()
     if ical_events.calendar is None:
@@ -36,38 +37,42 @@ async def async_setup_entry(
         return False
 
     sensors = []
+    sensor_name = f"{DOMAIN} {name}"
     for eventnumber in range(max_events):
-        sensors.append(ICalSensor(hass, ical_events, DOMAIN + " " + name, eventnumber))
+        sensors.append(
+            ICalSensor(
+                hass,
+                ical_events,
+                sensor_name,
+                eventnumber,
+                filter_keyword,
+            )
+        )
 
     async_add_entities(sensors)
 
 
-# pylint: disable=too-few-public-methods
 class ICalSensor(Entity):
-    """Implementation of a iCal sensor.
+    """Representation of an iCal sensor that shows the Nth upcoming event matching a keyword filter."""
 
-    Represents the Nth upcoming event.
-    May have a name like 'sensor.mycalander_event_0' for the first
-    upcoming event.
-    """
-
-    def __init__(
-        self, hass: HomeAssistant, ical_events, sensor_name, event_number
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, ical_events, sensor_name, event_number, filter_keyword) -> None:
         """Initialize the sensor.
 
-        sensor_name is typically the name of the calendar.
-        eventnumber indicates which upcoming event this is, starting at zero
+        Args:
+            hass (HomeAssistant): the Home Assistant instance.
+            ical_events: The object handling calendar updates.
+            sensor_name (str): Name of the sensor/calendar.
+            event_number (int): Index of the upcoming event to display.
+            filter_keyword (str): Mot clé à utiliser pour filtrer les événements selon leur sommaire.
         """
         super().__init__()
-        self._event_number = event_number
         self._hass = hass
         self.ical_events = ical_events
+        self._event_number = event_number
         self._entity_id = generate_entity_id(
-            "sensor.{}",
-            f"{sensor_name} event {self._event_number}",
-            hass=self._hass,
+            "sensor.{}", f"{sensor_name} event {self._event_number}", hass=self._hass
         )
+        self._filter_keyword = filter_keyword.lower() if filter_keyword else ""
         self._event_attributes = {
             "summary": None,
             "description": None,
@@ -86,7 +91,7 @@ class ICalSensor(Entity):
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return the name of the sensor (dynamically from event summary)."""
         return self._event_attributes["summary"]
 
     @property
@@ -96,7 +101,7 @@ class ICalSensor(Entity):
 
     @property
     def state(self):
-        """Return the date of the next event."""
+        """Return the state of the sensor."""
         return self._state
 
     @property
@@ -106,47 +111,55 @@ class ICalSensor(Entity):
 
     @property
     def available(self):
-        """Return True if ZoneMinder is available."""
-        return self.extra_state_attributes["start"] is not None
+        """Return True if an event is available."""
+        return self._event_attributes["start"] is not None
 
     async def async_update(self):
-        """Update the sensor."""
+        """Fetch new state data for the sensor."""
         _LOGGER.debug("Running ICalSensor async update for %s", self.name)
 
         await self.ical_events.update()
 
         event_list = self.ical_events.calendar
-        # _LOGGER.debug(f"Event List: {event_list}")
+
+        # Appliquer le filtre par mot clé sur le sommaire si défini
+        if self._filter_keyword:
+            filtered_events = []
+            for event in event_list:
+                summary = event.get("summary", "").lower()
+                if self._filter_keyword in summary:
+                    filtered_events.append(event)
+            event_list = filtered_events
+
         if event_list and (self._event_number < len(event_list)):
             val = event_list[self._event_number]
-            name = val.get("summary", "Unknown")
+            event_summary = val.get("summary", "Unknown")
             start = val.get("start")
 
-            # _LOGGER.debug(f"Val: {val}")
             _LOGGER.debug(
-                "Adding event %s - Start %s - End %s - as event %s to calendar %s",
-                val.get("summary", "unknown"),
+                "Adding event %s - Start %s - End %s - as event %s",
+                event_summary,
                 val.get("start"),
                 val.get("end"),
                 str(self._event_number),
-                self.name,
             )
 
-            self._event_attributes["summary"] = val.get("summary", "unknown")
-            self._event_attributes["start"] = val.get("start")
+            self._event_attributes["summary"] = event_summary
+            self._event_attributes["start"] = start
             self._event_attributes["end"] = val.get("end")
             self._event_attributes["location"] = val.get("location", "")
             self._event_attributes["description"] = val.get("description", "")
+            self._event_attributes["all_day"] = val.get("all_day")
+            # Calcul de l'ETA en jours (ajusté d'un jour)
             self._event_attributes["eta"] = (
                 start - datetime.now(start.tzinfo) + timedelta(days=1)
             ).days
-            self._event_attributes["all_day"] = val.get("all_day")
-            self._state = f"{name} - {start.strftime('%-d %B %Y')}"
+
+            self._state = f"{event_summary} - {start.strftime('%-d %B %Y')}"
             if not val.get("all_day"):
                 self._state += f" {start.strftime('%H:%M')}"
-            # self._is_available = True
-        elif self._event_number >= len(event_list):
-            # No further events are found in the calendar
+        else:
+            # Aucun événement correspondant n'a été trouvé pour cet index
             self._event_attributes = {
                 "summary": None,
                 "description": None,
