@@ -1,4 +1,4 @@
-# iCal Sensor Support for Home Assistant CUSTOM BY fRaZoU1
+# iCal Sensor filter Support for Home Assistant custom
 
 This integration will create sensors for the next few future calendar events, called:
 
