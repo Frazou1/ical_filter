@@ -1,12 +1,15 @@
 {
-  "title": "ical",
+  "title": "iCal Custom",
   "config": {
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "name": "[%key:common::config_flow::data::name%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "max_events": "[%key:common::config_flow::data::max_events%]",
+          "days": "[%key:common::config_flow::data::days%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "filter_keyword": "[%key:common::config_flow::data::filter_keyword%]"
         }
       }
     },
