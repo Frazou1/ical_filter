@@ -1,4 +1,4 @@
-"""Config flow for ical integration."""
+"""Config flow for ical_custom integration."""
 import logging
 
 import voluptuous as vol
@@ -7,15 +7,15 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_NAME, CONF_URL, CONF_VERIFY_SSL
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_DAYS, CONF_MAX_EVENTS, DOMAIN
+from .const import CONF_DAYS, CONF_MAX_EVENTS, DOMAIN, CONF_FILTER_KEYWORD
 
 DEFAULT_MAX_EVENTS = 5
 DEFAULT_DAYS = 365
+DEFAULT_FILTER_KEYWORD = ""  # Par défaut, aucun filtre n'est appliqué
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
-# DATA_SCHEMA = vol.Schema({CONF_NAME: cv.string, CONF_URL: cv.url, CONF_MAX_EVENTS: cv.positive_int, CONF_DAYS: cv.positive_int, CONF_VERIFY_SSL: cv.boolean})
+# Schéma de configuration mis à jour pour inclure le champ de filtre par mot-clé
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
@@ -23,6 +23,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_MAX_EVENTS, default=DEFAULT_MAX_EVENTS): cv.positive_int,
         vol.Optional(CONF_DAYS, default=DEFAULT_DAYS): cv.positive_int,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Optional(CONF_FILTER_KEYWORD, default=DEFAULT_FILTER_KEYWORD): cv.string,
     }
 )
 
@@ -30,7 +31,7 @@ DATA_SCHEMA = vol.Schema(
 class PlaceholderHub:
     """Placeholder class to make tests pass.
 
-    TODO Remove this placeholder class and replace with things from your PyPI package.
+    TODO: Remplacer cette classe par la logique d'authentification réelle de votre package.
     """
 
     def __init__(self, host):
@@ -45,35 +46,22 @@ class PlaceholderHub:
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
-    Data has the keys from DATA_SCHEMA with values provided by the user.
+    'data' contient les clés définies dans DATA_SCHEMA.
     """
-    # TODO validate the data can be used to set up a connection.
-
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
-
+    # TODO: Valider que les données permettent de se connecter à la source réelle.
     hub = PlaceholderHub(data["name"])
 
     if not await hub.authenticate(data["url"], data["url"]):
         raise InvalidAuth
 
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
-
-    # Return info that you want to store in the config entry.
+    # Retourner les informations à stocker dans le config entry.
     return {"title": data[CONF_NAME], "url": data[CONF_URL]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for ical."""
+    """Handle a config flow for ical_custom."""
 
     VERSION = 1
-    # TODO pick one of the available connection classes in homeassistant/config_entries.py
     CONNECTION_CLASS = config_entries.CONN_CLASS_UNKNOWN
 
     async def async_step_user(self, user_input=None):
@@ -82,7 +70,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-
                 return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
