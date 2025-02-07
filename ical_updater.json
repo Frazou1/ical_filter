@@ -1,7 +1,7 @@
 {
   "sensor.ical_custom": {
     "updated_at": "2025-02-04",
-    "version": "1.0.1",
+    "version": "1.0.0",
     "local_location": "/custom_components/ical_custom/__init__.py",
     "remote_location": "https://raw.githubusercontent.com/Frazou1/ical_filter/main/__init__.py",
     "visit_repo": "https://github.com/Frazou1/ical_filter/",
