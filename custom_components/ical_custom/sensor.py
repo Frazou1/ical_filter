@@ -145,8 +145,8 @@ class ICalSensor(Entity):
             )
 
             self._event_attributes["summary"] = event_summary
-            self._event_attributes["start"] = start
-            self._event_attributes["end"] = val.get("end")
+            self._event_attributes["start"] = start.strftime('%Y%m%dT%H%M%S')
+            self._event_attributes["end"] = val.get("end").strftime('%Y%m%dT%H%M%S') if val.get("end") else None
             self._event_attributes["location"] = val.get("location", "")
             self._event_attributes["description"] = val.get("description", "")
             self._event_attributes["all_day"] = val.get("all_day")
@@ -155,9 +155,10 @@ class ICalSensor(Entity):
                 start - datetime.now(start.tzinfo) + timedelta(days=1)
             ).days
 
-            self._state = f"{event_summary} - {start.strftime('%-d %B %Y')}"
-            if not val.get("all_day"):
+            self._state = f"{event_summary} - {start.strftime('%-d %B %Y')}" 
+            if not val.get("all_day"): 
                 self._state += f" {start.strftime('%H:%M')}"
+
         else:
             # Aucun événement correspondant n'a été trouvé pour cet index
             self._event_attributes = {
