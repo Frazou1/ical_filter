@@ -1,6 +1,6 @@
 """Constants for the ical integration."""
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 DOMAIN = "ical_custom"
 
 CONF_MAX_EVENTS = "max_events"
